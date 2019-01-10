@@ -12,8 +12,8 @@ from django.views.decorators.http import require_POST
 from django_comments import signals
 from django_comments.views.comments import CommentPostBadRequest
 
-from fluent_comments.utils import get_comment_template_name, get_comment_context_data
 from fluent_comments import appsettings
+from fluent_comments.utils import get_comment_template_name, get_comment_context_data
 
 if sys.version_info[0] >= 3:
     long = int
@@ -66,7 +66,7 @@ def post_comment_ajax(request, using=None):
     is_preview = "preview" in data
 
     # Construct the comment form
-    form = django_comments.get_form()(target, data=data, is_preview=is_preview)
+    form = django_comments.get_form()(target, data=data, is_preview=is_preview, request=request)
 
     # Check security information
     if form.security_errors():
