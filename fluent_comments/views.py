@@ -3,6 +3,7 @@ import sys
 
 import django_comments
 from django.apps import apps
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
@@ -66,7 +67,10 @@ def post_comment_ajax(request, using=None):
     is_preview = "preview" in data
 
     # Construct the comment form
-    form = django_comments.get_form()(target, data=data, is_preview=is_preview, request=request)
+    form = django_comments.get_form()(target, data=data, is_preview=is_preview)
+
+    # Get current site
+    site = get_current_site(request)
 
     # Check security information
     if form.security_errors():
@@ -74,13 +78,13 @@ def post_comment_ajax(request, using=None):
 
     # If there are errors or if we requested a preview show the comment
     if is_preview:
-        comment = form.get_comment_object() if not form.errors else None
+        comment = form.get_comment_object(site_id=site.id) if not form.errors else None
         return _ajax_result(request, form, "preview", comment, object_id=object_pk)
     if form.errors:
         return _ajax_result(request, form, "post", object_id=object_pk)
 
     # Otherwise create the comment
-    comment = form.get_comment_object()
+    comment = form.get_comment_object(site_id=site.id)
     comment.ip_address = request.META.get("REMOTE_ADDR", None)
     if request.user.is_authenticated:
         comment.user = request.user
